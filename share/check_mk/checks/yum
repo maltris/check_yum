@@ -1,0 +1,59 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+
+factory_settings["yum_default_levels"] = {
+    "normal"   : 1,
+    "security" : 2,
+}
+
+
+def inventory_yum(info):
+    yield None, {}
+
+def parse_yum(info):
+    parsed= {}
+    for line in info:
+        if line[0].startswith("<<"):
+            instance = line[0][2:-2]
+            parsed[instance] = []
+        elif instance:
+            parsed[instance].append(line)
+    return parsed
+
+def check_yum(_no_item, params, parsed):
+    updates = []
+    sec_updates = []
+    for type in parsed:
+        if type == "normal":
+            for line in parsed[type]:
+                updates.append(line[2])
+        elif type == "security":
+            for line in parsed[type]:
+                sec_updates.append(line[2])
+
+    state = 0
+    if updates:
+        state = params["normal"]
+    updates_count = len(updates) - len(sec_updates)
+    yield state, "%d normal updates" % updates_count, [ ("normal_updates", updates_count ) ]
+
+    state = 0
+    if sec_updates:
+        state = params["security"]
+        text = " (%s)" % ", ".join(sec_updates)
+    else:
+        text = ""
+
+    yield state, "%d security updates%s" % (len(sec_updates), text), [ ("security_updates", len(sec_updates)) ]
+
+
+check_info['yum'] = {
+    "inventory_function"      : inventory_yum,
+    "check_function"          : check_yum,
+    "parse_function"          : parse_yum,
+    "service_description"     : "YUM Updates",
+    "group"                   : "yum",
+    "has_perfdata"            : True,
+    "default_levels_variable" : "yum_default_levels",
+}
+

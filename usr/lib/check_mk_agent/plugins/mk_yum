@@ -1,0 +1,5 @@
+echo "<<<yum>>>"
+echo "<<normal>>"
+yum -q check-update
+echo "<<security>>"
+yum -q updateinfo list updates | grep "\/Sec\."

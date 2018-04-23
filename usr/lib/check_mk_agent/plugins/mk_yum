@@ -1,5 +1,6 @@
 echo "<<<yum>>>"
 echo "<<normal>>"
-yum -q check-update
+repoquery -C -a --qf="%{name}.%{arch} %{version}-%{release} %{repoid}" --pkgnarrow=updates
+# OR yum -q check-update but be aware of differentl formatted, possibly split or LANG-dependent output
 echo "<<security>>"
 yum -q updateinfo list updates | grep "\/Sec\."
